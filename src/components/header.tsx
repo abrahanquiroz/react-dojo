@@ -2,29 +2,32 @@
 
 import Link from "next/link"
 import { useRef, useState } from "react"
-import { Search, Star } from "lucide-react"
+import { Keyboard, Search, Star } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useTheme } from "@/hooks/use-theme"
 import { useEditorTheme } from "@/hooks/use-editor-theme"
 import { useGitHubStars } from "@/hooks/use-github-stars"
+import { useCountUp } from "@/hooks/use-count-up"
 import { Logo } from "@/components/logo"
 import { LocaleSwitcher } from "@/components/locale-switcher"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip"
 import { useLocaleRouter } from "@/hooks/use-locale-router"
 import { type EditorThemeId } from "@/types"
-import { EDITOR_THEMES_META, REPOSITORY } from "@/lib/constants"
-import { MoonIcon, PaletteIcon, SunIcon } from "./svg-icons"
+import { DISCORD_URL, EDITOR_THEMES_META, REPOSITORY, STARS_KILO_THRESHOLD } from "@/lib/constants"
+import { DiscordIcon, MoonIcon, PaletteIcon, SunIcon } from "./svg-icons"
 
 interface HeaderProps {
   onSearchOpen?: () => void
+  onShortcutsOpen?: () => void
 }
 
-export function Header({ onSearchOpen }: HeaderProps) {
+export function Header({ onSearchOpen, onShortcutsOpen }: HeaderProps) {
   const t = useTranslations("Header")
   const { theme, toggle } = useTheme()
   const { editorTheme, setEditorTheme } = useEditorTheme()
   const stars = useGitHubStars(REPOSITORY)
+  const animatedStars = useCountUp(stars)
   const [pickerOpen, setPickerOpen] = useState(false)
   const pickerRef = useRef<HTMLDivElement>(null)
   const { href } = useLocaleRouter()
@@ -43,9 +46,9 @@ export function Header({ onSearchOpen }: HeaderProps) {
   return (
     <TooltipProvider delay={400}>
       <header className="relative z-20 flex h-12 shrink-0 items-center justify-between border-b border-[var(--color-line)] bg-[var(--color-bg)] px-3 md:px-6">
+        {/* Left — logo */}
         <div className="flex items-center gap-2">
           <SidebarTrigger className="text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-fg)] md:hidden" />
-
           <Link
             href={href("/")}
             className="flex items-center gap-2 text-[14px] text-[var(--color-fg)] transition-colors hover:text-[var(--color-fg-muted)]"
@@ -55,8 +58,9 @@ export function Header({ onSearchOpen }: HeaderProps) {
           </Link>
         </div>
 
-        <div className="flex items-center gap-2 md:gap-3">
-          {/* Mobile search — icon only */}
+        {/* Right — actions */}
+        <div className="flex items-center gap-1 md:gap-2">
+          {/* Mobile search icon */}
           <button
             type="button"
             onClick={onSearchOpen}
@@ -66,7 +70,7 @@ export function Header({ onSearchOpen }: HeaderProps) {
             <Search className="h-[15px] w-[15px]" strokeWidth={1.8} />
           </button>
 
-          {/* Search trigger */}
+          {/* Desktop search */}
           <button
             type="button"
             onClick={onSearchOpen}
@@ -82,39 +86,34 @@ export function Header({ onSearchOpen }: HeaderProps) {
           >
             <Search className="h-[12px] w-[12px] shrink-0" strokeWidth={1.8} />
             <span className="flex-1 text-left font-mono">{t("searchPlaceholder")}</span>
-            <kbd
-              className="shrink-0 rounded border px-1.5 py-0.5 font-mono text-[10px] leading-4"
-              style={
-                theme === "light"
-                  ? {
-                      background: "rgba(0,0,0,0.05)",
-                      borderColor: "rgba(0,0,0,0.12)",
-                      color: "#a29f97",
-                    }
-                  : {
-                      background: "rgba(255,255,255,0.06)",
-                      borderColor: "rgba(255,255,255,0.1)",
-                      color: "#5c5c61",
-                    }
-              }
-            >
-              ⌘K
-            </kbd>
+            <div className="flex items-center gap-0.5">
+              {["⌘", "K"].map((k) => (
+                <kbd
+                  key={k}
+                  className="rounded border border-[var(--color-line-strong)] bg-[var(--color-bg-hover)] px-1.5 py-0.5 font-mono text-[10px] leading-none text-[var(--color-fg-muted)]"
+                >
+                  {k}
+                </kbd>
+              ))}
+            </div>
           </button>
 
+          {/* GitHub stars */}
           {stars !== null && (
             <Tooltip>
               <TooltipTrigger
                 render={
                   <a
-                    href="https://github.com/drbarzaga/react-dojo"
+                    href={`https://github.com/${REPOSITORY}`}
                     target="_blank"
                     rel="noreferrer"
                     className="flex h-7 items-center gap-1.5 rounded-md px-2 text-[12px] text-[var(--color-fg-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-fg)]"
                   >
-                    <Star className="h-[15px] w-[15px] fill-yellow-400 text-yellow-400" />
+                    <Star className="star-animate h-[15px] w-[15px] fill-yellow-400 text-yellow-400" />
                     <span className="font-mono">
-                      {stars >= 1000 ? `${(stars / 1000).toFixed(1)}k` : stars}
+                      {animatedStars >= STARS_KILO_THRESHOLD
+                        ? `${(animatedStars / STARS_KILO_THRESHOLD).toFixed(1)}k`
+                        : animatedStars}
                     </span>
                   </a>
                 }
@@ -181,6 +180,7 @@ export function Header({ onSearchOpen }: HeaderProps) {
             )}
           </div>
 
+          {/* Theme toggle */}
           <Tooltip>
             <TooltipTrigger
               render={
@@ -201,7 +201,42 @@ export function Header({ onSearchOpen }: HeaderProps) {
             <TooltipContent>{theme === "dark" ? t("modeLight") : t("modeDark")}</TooltipContent>
           </Tooltip>
 
+          {/* Keyboard shortcuts */}
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <button
+                  type="button"
+                  onClick={onShortcutsOpen}
+                  aria-label="Keyboard shortcuts"
+                  className="grid h-7 w-7 place-items-center rounded-md text-[var(--color-fg-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-fg)]"
+                >
+                  <Keyboard className="h-[15px] w-[15px]" strokeWidth={1.8} />
+                </button>
+              }
+            />
+            <TooltipContent>Keyboard shortcuts</TooltipContent>
+          </Tooltip>
+
           <LocaleSwitcher />
+
+          {/* Discord */}
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <a
+                  href={DISCORD_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={t("joinDiscord")}
+                  className="discord-glow grid h-7 w-7 place-items-center rounded-md text-[#5865F2] transition-colors hover:bg-[var(--color-bg-hover)]"
+                >
+                  <DiscordIcon className="h-[16px] w-[16px]" />
+                </a>
+              }
+            />
+            <TooltipContent>{t("joinDiscord")}</TooltipContent>
+          </Tooltip>
         </div>
       </header>
     </TooltipProvider>

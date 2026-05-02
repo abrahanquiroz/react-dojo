@@ -5,12 +5,29 @@
     "exercises": "{count} exercises",
     "categories": "{count} categories",
     "start": "Start",
-    "practice": "Practice"
+    "practice": "Practice",
+    "surprise": "Surprise me",
+    "keyboardHint": "navigate between concepts",
+    "shortcutPrev": "prev",
+    "shortcutNext": "next"
+  },
+  "ShortcutsModal": {
+    "title": "Keyboard shortcuts",
+    "sectionNavigation": "Navigation",
+    "sectionHome": "Home",
+    "sectionGeneral": "General",
+    "navigate": "Previous / next concept",
+    "search": "Open search",
+    "start": "Start learning",
+    "practice": "Go to practice",
+    "surprise": "Surprise me",
+    "openShortcuts": "Open this panel"
   },
   "Header": {
     "search": "Search",
     "searchPlaceholder": "Search…",
     "supportProject": "Support the project",
+    "joinDiscord": "Join our Discord",
     "editorTheme": "Editor theme",
     "switchToLight": "Switch to light theme",
     "switchToDark": "Switch to dark theme",
